@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TekAccess - Firebase Setup</title>
+    <style>
+        :root {
+            --tek-red: #C00000;
+            --tek-navy: #0D153A;
+            --tek-grad: linear-gradient(135deg, var(--tek-red) 0%, var(--tek-navy) 100%);
+            --bg: #0b1220;
+            --card: #0f1526;
+            --ink: #e8eefc;
+            --muted: #9aa6bf;
+            --line: #1d2340;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--ink);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .logo img {
+            height: 40px;
+            width: auto;
+        }
+        
+        .logo-text {
+            font-size: 28px;
+            font-weight: 900;
+            background: var(--tek-grad);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        h1 {
+            font-size: 32px;
+            font-weight: 900;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            color: var(--muted);
+            margin-bottom: 40px;
+        }
+        
+        .step-card {
+            background: var(--card);
+            border-radius: 16px;
+            border: 1px solid var(--line);
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .step-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .step-number {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--tek-grad);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 18px;
+        }
+        
+        .step-title {
+            font-size: 20px;
+            font-weight: 900;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--ink);
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            background: var(--bg);
+            color: var(--ink);
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--tek-red);
+            box-shadow: 0 0 0 3px rgba(192, 0, 0, 0.1);
+        }
+        
+        .code-block {
+            background: #1a1f36;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #e2e8f0;
+        }
+        
+        .btn {
+            padding: 14px 28px;
+            border-radius: 12px;
+            border: none;
+            font-weight: 800;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: var(--tek-grad);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(192, 0, 0, 0.25);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--line);
+            color: var(--ink);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(192, 0, 0, 0.1);
+        }
+        
+        .status-box {
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .status-success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .status-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+        
+        .status-loading {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .config-output {
+            background: #1a1f36;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Courier New', monospace;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .note {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 20px 0;
+            color: var(--warning);
+        }
+        
+        @media (max-width: 640px) {
+            .container {
+                padding: 0;
+            }
+            
+            .step-card {
+                padding: 20px;
+            }
+            
+            .actions {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">
+                <img src="assets/images/logo.jpg" alt="TekAccess">
+                <span class="logo-text">TekAccess</span>
+            </div>
+            <h1>Firebase Database Setup</h1>
+            <p class="subtitle">One-time setup for your website's backend</p>
+        </div>
+        
+        <!-- Step 1: Firebase Configuration -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-title">Firebase Project Setup</div>
+            </div>
+            
+            <p style="margin-bottom: 20px; color: var(--muted);">
+                Create a Firebase project and get your configuration.
+            </p>
+            
+            <ol style="margin-left: 20px; margin-bottom: 20px; color: var(--muted); line-height: 1.8;">
+                <li>Go to <a href="https://console.firebase.google.com/" target="_blank" style="color: var(--tek-red);">Firebase Console</a></li>
+                <li>Click "Create a project" → Name it "TekAccess-Logistics"</li>
+                <li>Continue through the setup (disable Google Analytics for speed)</li>
+                <li>Click "Firestore Database" in sidebar → Create database → Start in test mode</li>
+                <li>Click "Project Settings" (gear icon) → General tab</li>
+                <li>Scroll down to "Your apps" → Click Web (</> icon)</li>
+                <li>Register app: "TekAccess-Website" → Click "Register app"</li>
+                <li>Copy the firebaseConfig object that appears</li>
+            </ol>
+            
+            <div class="note">
+                <strong>Note:</strong> Make sure to select "Start in test mode" when creating Firestore database.
+                This allows reads/writes during setup. We'll secure it later.
+            </div>
+        </div>
+        
+        <!-- Step 2: Enter Firebase Config -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-title">Enter Firebase Configuration</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="apiKey">API Key</label>
+                <input type="text" id="apiKey" placeholder="AIzaSyB9P1E5bQXrv4rZjtCp8bROES8pTnM0Z8s">
+            </div>
+            
+            <div class="form-group">
+                <label for="authDomain">Auth Domain</label>
+                <input type="text" id="authDomain" placeholder="tekaccess-logistics.firebaseapp.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="projectId">Project ID</label>
+                <input type="text" id="projectId" placeholder="tekaccess-logistics">
+            </div>
+            
+            <div class="form-group">
+                <label for="storageBucket">Storage Bucket</label>
+                <input type="text" id="storageBucket" placeholder="tekaccess-logistics.appspot.com">
+            </div>
+            
+            <div class="form-group">
+                <label for="messagingSenderId">Messaging Sender ID</label>
+                <input type="text" id="messagingSenderId" placeholder="123456789012">
+            </div>
+            
+            <div class="form-group">
+                <label for="appId">App ID</label>
+                <input type="text" id="appId" placeholder="1:123456789012:web:abcdef123456">
+            </div>
+            
+            <div class="actions">
+                <button class="btn btn-secondary" id="testConnectionBtn">
+                    <span id="testBtnText">Test Connection</span>
+                    <span class="loading" id="testLoading" style="display: none;"></span>
+                </button>
+            </div>
+            
+            <div class="status-box" id="connectionStatus"></div>
+        </div>
+        
+        <!-- Step 3: Admin Credentials -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-title">Set Admin Login Credentials</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="adminUsername">Admin Username</label>
+                <input type="text" id="adminUsername" value="admin" placeholder="Enter admin username">
+            </div>
+            
+            <div class="form-group">
+                <label for="adminPassword">Admin Password</label>
+                <input type="password" id="adminPassword" value="tekaccess2024" placeholder="Enter admin password">
+            </div>
+            
+            <div class="note">
+                <strong>Important:</strong> Change these credentials from the default values for security.
+                You can change them later in the admin panel.
+            </div>
+        </div>
+        
+        <!-- Step 4: Initialize Database -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-title">Initialize Database</div>
+            </div>
+            
+            <p style="margin-bottom: 20px; color: var(--muted);">
+                This will create all necessary collections and default data for your website.
+            </p>
+            
+            <div class="actions">
+                <button class="btn btn-primary" id="setupDatabaseBtn">
+                    <span id="setupBtnText">Initialize Database</span>
+                    <span class="loading" id="setupLoading" style="display: none;"></span>
+                </button>
+            </div>
+            
+            <div class="status-box" id="setupStatus"></div>
+        </div>
+        
+        <!-- Step 5: Final Configuration -->
+        <div class="step-card">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-title">Update Website Files</div>
+            </div>
+            
+            <p style="margin-bottom: 20px; color: var(--muted);">
+                Copy this Firebase configuration to your website files:
+            </p>
+            
+            <div class="config-output" id="configOutput">
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};</div>
+            
+            <p style="margin-bottom: 15px; color: var(--muted);">
+                Replace the Firebase config in these files:
+            </p>
+            
+            <ol style="margin-left: 20px; margin-bottom: 20px; color: var(--muted); line-height: 1.8;">
+                <li><code>index.html</code> - Around line 3500 (in the &lt;script&gt; tag)</li>
+                <li><code>admin-login.html</code> - Around line 90</li>
+                <li><code>admin-dashboard.html</code> - Around line 1000</li>
+            </ol>
+            
+            <div class="actions">
+                <button class="btn btn-secondary" onclick="window.open('index.html', '_blank')">View Website</button>
+                <button class="btn btn-secondary" onclick="window.open('admin-login.html', '_blank')">Go to Admin Login</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // ==================== DOM ELEMENTS ====================
+        const apiKeyInput = document.getElementById('apiKey');
+        const authDomainInput = document.getElementById('authDomain');
+        const projectIdInput = document.getElementById('projectId');
+        const storageBucketInput = document.getElementById('storageBucket');
+        const messagingSenderIdInput = document.getElementById('messagingSenderId');
+        const appIdInput = document.getElementById('appId');
+        const adminUsernameInput = document.getElementById('adminUsername');
+        const adminPasswordInput = document.getElementById('adminPassword');
+        
+        const testConnectionBtn = document.getElementById('testConnectionBtn');
+        const testBtnText = document.getElementById('testBtnText');
+        const testLoading = document.getElementById('testLoading');
+        const connectionStatus = document.getElementById('connectionStatus');
+        
+        const setupDatabaseBtn = document.getElementById('setupDatabaseBtn');
+        const setupBtnText = document.getElementById('setupBtnText');
+        const setupLoading = document.getElementById('setupLoading');
+        const setupStatus = document.getElementById('setupStatus');
+        
+        const configOutput = document.getElementById('configOutput');
+        
+        let firebaseApp = null;
+        
+        // ==================== TEST CONNECTION ====================
+        testConnectionBtn.addEventListener('click', async () => {
+            const config = getFirebaseConfig();
+            if (!validateConfig(config)) {
+                showStatus(connectionStatus, 'Please fill all Firebase configuration fields', 'error');
+                return;
+            }
+            
+            testConnectionBtn.disabled = true;
+            testBtnText.style.display = 'none';
+            testLoading.style.display = 'inline-block';
+            
+            try {
+                // Initialize Firebase
+                if (firebaseApp) {
+                    firebaseApp.delete();
+                }
+                
+                firebaseApp = firebase.initializeApp(config);
+                const db = firebase.firestore();
+                
+                // Test write and read
+                const testDoc = db.collection('_test').doc('connection');
+                await testDoc.set({
+                    test: true,
+                    timestamp: new Date().toISOString()
+                });
+                
+                const doc = await testDoc.get();
+                await testDoc.delete();
+                
+                // Update config output
+                updateConfigOutput(config);
+                
+                showStatus(connectionStatus, '✅ Firebase connection successful!', 'success');
+                
+            } catch (error) {
+                showStatus(connectionStatus, `❌ Connection failed: ${error.message}`, 'error');
+            } finally {
+                testConnectionBtn.disabled = false;
+                testBtnText.style.display = 'inline';
+                testLoading.style.display = 'none';
+            }
+        });
+        
+        // ==================== SETUP DATABASE ====================
+        setupDatabaseBtn.addEventListener('click', async () => {
+            const config = getFirebaseConfig();
+            const username = adminUsernameInput.value.trim();
+            const password = adminPasswordInput.value.trim();
+            
+            if (!validateConfig(config)) {
+                showStatus(setupStatus, 'Please complete Firebase configuration first', 'error');
+                return;
+            }
+            
+            if (!username || !password) {
+                showStatus(setupStatus, 'Please enter admin username and password', 'error');
+                return;
+            }
+            
+            setupDatabaseBtn.disabled = true;
+            setupBtnText.style.display = 'none';
+            setupLoading.style.display = 'inline-block';
+            showStatus(setupStatus, 'Initializing database...', 'loading');
+            
+            try {
+                // Initialize Firebase if not already done
+                if (!firebaseApp) {
+                    firebaseApp = firebase.initializeApp(config);
+                }
+                
+                const db = firebase.firestore();
+                
+                // Create all collections and default data
+                await createCollections(db, username, password);
+                
+                showStatus(setupStatus, '✅ Database setup completed successfully!', 'success');
+                
+                // Enable next steps
+                document.querySelectorAll('.step-card')[4].scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (error) {
+                showStatus(setupStatus, `❌ Setup failed: ${error.message}`, 'error');
+            } finally {
+                setupDatabaseBtn.disabled = false;
+                setupBtnText.style.display = 'inline';
+                setupLoading.style.display = 'none';
+            }
+        });
+        
+        // ==================== HELPER FUNCTIONS ====================
+        function getFirebaseConfig() {
+            return {
+                apiKey: apiKeyInput.value.trim(),
+                authDomain: authDomainInput.value.trim(),
+                projectId: projectIdInput.value.trim(),
+                storageBucket: storageBucketInput.value.trim(),
+                messagingSenderId: messagingSenderIdInput.value.trim(),
+                appId: appIdInput.value.trim()
+            };
+        }
+        
+        function validateConfig(config) {
+            return config.apiKey && config.authDomain && config.projectId && 
+                   config.storageBucket && config.messagingSenderId && config.appId;
+        }
+        
+        function updateConfigOutput(config) {
+            configOutput.textContent = `// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "${config.apiKey}",
+    authDomain: "${config.authDomain}",
+    projectId: "${config.projectId}",
+    storageBucket: "${config.storageBucket}",
+    messagingSenderId: "${config.messagingSenderId}",
+    appId: "${config.appId}"
+};`;
+        }
+        
+        function showStatus(element, message, type) {
+            element.textContent = message;
+            element.className = `status-box status-${type}`;
+            element.style.display = 'block';
+            
+            if (type === 'error') {
+                element.style.animation = 'shake 0.5s ease';
+                setTimeout(() => {
+                    element.style.animation = '';
+                }, 500);
+            }
+        }
+        
+        async function createCollections(db, username, password) {
+            showStatus(setupStatus, 'Creating admin credentials...', 'loading');
+            
+            // 1. Create admin credentials
+            await db.collection('admin').doc('credentials').set({
+                username: username,
+                password: password,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                lastLogin: null
+            });
+            
+            showStatus(setupStatus, 'Creating default services...', 'loading');
+            
+            // 2. Create default services (empty for now)
+            const services = [
+                {
+                    title: "Gypsum Supply",
+                    icon: "GS",
+                    description: "Professional gypsum supply services",
+                    order: 1,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                },
+                {
+                    title: "Clinker & Coal Supply",
+                    icon: "CS",
+                    description: "Reliable clinker and coal supply",
+                    order: 2,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            ];
+            
+            for (const service of services) {
+                await db.collection('services').add(service);
+            }
+            
+            showStatus(setupStatus, 'Creating default team members...', 'loading');
+            
+            // 3. Create default team members
+            const teamMembers = [
+                {
+                    name: "AHORUKOMEYE MURINZI BERTIN",
+                    position: "Chief Executive Officer",
+                    bio: "Founder and CEO of TekAccess Logistics",
+                    photo: "assets/images/ceo.jpg",
+                    order: 1,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            ];
+            
+            for (const member of teamMembers) {
+                await db.collection('team').add(member);
+            }
+            
+            showStatus(setupStatus, 'Creating website content...', 'loading');
+            
+            // 4. Create website default content
+            await db.collection('website').doc('hero').set({
+                title: "Logistics You Can Count On",
+                description: "Professional logistics solutions for your business",
+                stats: {
+                    years: "10%",
+                    clients: "35+",
+                    tonnage: "150K+"
+                },
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            await db.collection('website').doc('about').set({
+                content: "TekAccess Logistics provides reliable supply chain solutions across East Africa.",
+                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            showStatus(setupStatus, 'Setting up partners...', 'loading');
+            
+            // 5. Create default partners
+            const partners = [
+                {
+                    name: "Cheetah Logistics",
+                    logo: "assets/images/cheetah.jpg",
+                    order: 1,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                }
+            ];
+            
+            for (const partner of partners) {
+                await db.collection('partners').add(partner);
+            }
+            
+            // 6. Create default blog post
+            await db.collection('blog').add({
+                title: "Welcome to TekAccess Logistics",
+                category: "News",
+                excerpt: "We're excited to launch our new website!",
+                content: "Welcome to TekAccess Logistics. We provide professional logistics solutions.",
+                image: "assets/images/chemical.jpeg",
+                featured: true,
+                date: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            
+            // 7. Create admin logs collection
+            await db.collection('admin').doc('logs').set({
+                initialized: true,
+                setupDate: new Date().toISOString()
+            });
+        }
+        
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Try to load existing config from localStorage
+        window.addEventListener('load', () => {
+            const savedConfig = localStorage.getItem('tekaccess_firebase_config');
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    apiKeyInput.value = config.apiKey || '';
+                    authDomainInput.value = config.authDomain || '';
+                    projectIdInput.value = config.projectId || '';
+                    storageBucketInput.value = config.storageBucket || '';
+                    messagingSenderIdInput.value = config.messagingSenderId || '';
+                    appIdInput.value = config.appId || '';
+                    updateConfigOutput(config);
+                } catch (e) {
+                    console.log('No saved config found');
+                }
+            }
+            
+            // Save config on input change
+            const inputs = document.querySelectorAll('#apiKey, #authDomain, #projectId, #storageBucket, #messagingSenderId, #appId');
+            inputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    const config = getFirebaseConfig();
+                    if (validateConfig(config)) {
+                        localStorage.setItem('tekaccess_firebase_config', JSON.stringify(config));
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
