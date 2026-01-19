@@ -1,0 +1,1951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Content Manager</title>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            /* Light theme */
+            --bg-primary: #fafafa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f5f5f5;
+            --bg-input: #ffffff;
+            --border-color: #e5e5e5;
+            --border-light: #f0f0f0;
+            --text-primary: #171717;
+            --text-secondary: #525252;
+            --text-muted: #a3a3a3;
+            --accent: #dc2626;
+            --accent-hover: #b91c1c;
+            --accent-light: rgba(220, 38, 38, 0.1);
+            --accent-glow: rgba(220, 38, 38, 0.2);
+            --success: #22c55e;
+            --success-light: rgba(34, 197, 94, 0.1);
+            --error: #ef4444;
+            --error-light: rgba(239, 68, 68, 0.1);
+            --info: #3b82f6;
+            --info-light: rgba(59, 130, 246, 0.1);
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dark {
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #141414;
+            --bg-tertiary: #1a1a1a;
+            --bg-input: #1f1f1f;
+            --border-color: #262626;
+            --border-light: #1f1f1f;
+            --text-primary: #fafafa;
+            --text-secondary: #a3a3a3;
+            --text-muted: #525252;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+        
+        .dashboard {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(135deg, var(--accent) 0%, #991b1b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.5px;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            padding: 16px 12px;
+            overflow-y: auto;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 12px 16px 8px;
+        }
+        
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            margin-bottom: 4px;
+            position: relative;
+        }
+        
+        .sidebar-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+        
+        .sidebar-item.active {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        
+        .sidebar-item.active i {
+            color: var(--accent);
+        }
+        
+        .sidebar-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .sidebar-item span {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .counter-badge {
+            margin-left: auto;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .sidebar-item.active .counter-badge {
+            background: var(--accent);
+            color: white;
+        }
+        
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .logout-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            color: var(--error);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            width: 100%;
+            background: none;
+            border: none;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .logout-btn:hover {
+            background: var(--error-light);
+        }
+        
+        .logout-btn i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* ===== MAIN CONTENT ===== */
+        .main-content {
+            flex: 1;
+            margin-left: 280px;
+            background: var(--bg-primary);
+            transition: background 0.3s ease;
+        }
+        
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        
+        .header-title h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 2px;
+        }
+        
+        .header-title p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+        
+        .theme-toggle:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+        
+        .theme-toggle i {
+            font-size: 18px;
+        }
+        
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 16px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+        }
+        
+        .user-badge i {
+            color: var(--accent);
+            font-size: 16px;
+        }
+        
+        .content-area {
+            padding: 32px;
+        }
+        
+        /* ===== TAB CONTENT ===== */
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* ===== STATS CARDS ===== */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+        
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        
+        .stat-card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+        
+        .stat-card-icon.services {
+            background: var(--accent-light);
+            color: var(--accent);
+        }
+        
+        .stat-card-icon.team {
+            background: var(--info-light);
+            color: var(--info);
+        }
+        
+        .stat-card-icon.blogs {
+            background: var(--success-light);
+            color: var(--success);
+        }
+        
+        .stat-card h3 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .stat-card p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* ===== CARDS ===== */
+        .add-card {
+            background: var(--bg-secondary);
+            border: 2px dashed var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 24px;
+        }
+        
+        .add-card:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+        
+        .add-card-content {
+            text-align: center;
+        }
+        
+        .add-card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, var(--accent) 0%, #991b1b 100%);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 24px;
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .add-card-text {
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 16px;
+        }
+        
+        .add-card-subtext {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        
+        /* ===== CONTENT LIST ===== */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-header h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .section-header span {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .content-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .content-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .content-item:hover {
+            box-shadow: var(--shadow-sm);
+            border-color: var(--accent);
+        }
+        
+        .content-item-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .content-item-image {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            object-fit: cover;
+            background: var(--bg-tertiary);
+            flex-shrink: 0;
+        }
+        
+        .content-item-image.team {
+            border-radius: 50%;
+        }
+        
+        .content-item-text h4 {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 280px;
+        }
+        
+        .content-item-text p {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 350px;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .action-btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .edit-btn {
+            background: var(--info-light);
+            color: var(--info);
+        }
+        
+        .edit-btn:hover {
+            background: var(--info);
+            color: white;
+        }
+        
+        .delete-btn {
+            background: var(--error-light);
+            color: var(--error);
+        }
+        
+        .delete-btn:hover {
+            background: var(--error);
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+        
+        .empty-state h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            font-size: 14px;
+        }
+        
+        /* ===== MODAL ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 520px;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlide 0.3s ease;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        @keyframes modalSlide {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px) scale(0.98);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .modal-header h2 i {
+            color: var(--accent);
+        }
+        
+        .close-modal {
+            width: 36px;
+            height: 36px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-modal:hover {
+            background: var(--error-light);
+            color: var(--error);
+        }
+        
+        .modal-body {
+            padding: 24px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .form-group label .required {
+            color: var(--error);
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+        
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+        
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .form-help {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .form-help i {
+            color: var(--info);
+        }
+        
+        /* ===== IMAGE UPLOAD ===== */
+        .image-upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-tertiary);
+        }
+        
+        .image-upload-area:hover {
+            border-color: var(--accent);
+            background: var(--accent-light);
+        }
+        
+        .image-upload-area.has-image {
+            padding: 12px;
+        }
+        
+        .upload-placeholder i {
+            font-size: 36px;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .upload-placeholder p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        
+        .upload-placeholder span {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .image-preview.show {
+            display: block;
+        }
+        
+        .upload-status {
+            margin-top: 12px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .upload-status.uploading {
+            color: var(--info);
+        }
+        
+        .upload-status.success {
+            color: var(--success);
+        }
+        
+        .upload-status.error {
+            color: var(--error);
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        /* ===== MODAL FOOTER ===== */
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent) 0%, #991b1b 100%);
+            color: white;
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--accent-glow);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+        
+        /* ===== ALERTS ===== */
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+            animation: alertSlide 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        @keyframes alertSlide {
+            from { 
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .alert-success {
+            background: var(--bg-secondary);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+        
+        .alert-error {
+            background: var(--bg-secondary);
+            border: 1px solid var(--error);
+            color: var(--error);
+        }
+        
+        /* ===== SPINNER ===== */
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ===== MOBILE MENU ===== */
+        .mobile-menu-btn {
+            display: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+        
+        .mobile-menu-btn i {
+            font-size: 20px;
+        }
+        
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: flex;
+            }
+            
+            .content-item-text h4,
+            .content-item-text p {
+                max-width: 200px;
+            }
+        }
+        
+        @media (max-width: 640px) {
+            .content-area {
+                padding: 20px;
+            }
+            
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .content-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+            
+            .action-buttons {
+                width: 100%;
+            }
+            
+            .action-btn {
+                flex: 1;
+                justify-content: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <div class="logo-icon">T</div>
+                    <div class="logo-text">Tekaccess</div>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-label">Content Management</div>
+                
+                <div class="sidebar-item active" data-tab="services">
+                    <i class="fas fa-concierge-bell"></i>
+                    <span>Services</span>
+                    <span class="counter-badge" id="servicesCount">0</span>
+                </div>
+                
+                <div class="sidebar-item" data-tab="team">
+                    <i class="fas fa-users"></i>
+                    <span>Team Members</span>
+                    <span class="counter-badge" id="teamCount">0</span>
+                </div>
+                
+                <div class="sidebar-item" data-tab="blogs">
+                    <i class="fas fa-newspaper"></i>
+                    <span>Blog Posts</span>
+                    <span class="counter-badge" id="blogsCount">0</span>
+                </div>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Sign Out</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="header">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <button class="mobile-menu-btn" id="mobileMenuBtn">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="header-title">
+                        <h1 id="pageTitle">Services</h1>
+                        <p id="pageSubtitle">Manage your service offerings</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button class="theme-toggle" id="themeToggle" title="Toggle theme">
+                        <i class="fas fa-moon" id="themeIcon"></i>
+                    </button>
+                    <div class="user-badge">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="userEmail">Admin</span>
+                    </div>
+                </div>
+            </header>
+            
+            <div class="content-area">
+                <!-- Services Tab -->
+                <div id="servicesTab" class="tab-content active">
+                    <div class="add-card" onclick="showAddServiceModal()">
+                        <div class="add-card-content">
+                            <div class="add-card-icon">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <div class="add-card-text">Add New Service</div>
+                            <div class="add-card-subtext">Create a new service offering</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-header">
+                        <h3>All Services</h3>
+                        <span id="totalServicesText">0 services</span>
+                    </div>
+                    
+                    <div class="content-grid" id="servicesList">
+                        <div class="empty-state">
+                            <i class="fas fa-concierge-bell"></i>
+                            <h4>No services yet</h4>
+                            <p>Add your first service to get started</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Team Tab -->
+                <div id="teamTab" class="tab-content">
+                    <div class="add-card" onclick="showAddTeamModal()">
+                        <div class="add-card-content">
+                            <div class="add-card-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="add-card-text">Add Team Member</div>
+                            <div class="add-card-subtext">Add a new member to the team</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-header">
+                        <h3>All Team Members</h3>
+                        <span id="totalTeamText">0 members</span>
+                    </div>
+                    
+                    <div class="content-grid" id="teamList">
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h4>No team members yet</h4>
+                            <p>Add your first team member to get started</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Blogs Tab -->
+                <div id="blogsTab" class="tab-content">
+                    <div class="add-card" onclick="showAddBlogModal()">
+                        <div class="add-card-content">
+                            <div class="add-card-icon">
+                                <i class="fas fa-pen-fancy"></i>
+                            </div>
+                            <div class="add-card-text">Create Blog Post</div>
+                            <div class="add-card-subtext">Write a new blog article</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-header">
+                        <h3>All Blog Posts</h3>
+                        <span id="totalBlogsText">0 posts</span>
+                    </div>
+                    
+                    <div class="content-grid" id="blogsList">
+                        <div class="empty-state">
+                            <i class="fas fa-newspaper"></i>
+                            <h4>No blog posts yet</h4>
+                            <p>Create your first blog post to get started</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Success Alert -->
+    <div class="alert alert-success" id="successAlert">
+        <i class="fas fa-check-circle"></i>
+        <span id="successMessage">Changes saved successfully!</span>
+    </div>
+    
+    <!-- Error Alert -->
+    <div class="alert alert-error" id="errorAlert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span id="errorMessage">Something went wrong!</span>
+    </div>
+    
+    <!-- Service Modal -->
+    <div id="serviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="serviceModalTitle"><i class="fas fa-concierge-bell"></i> Add New Service</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Service Title <span class="required">*</span></label>
+                    <input type="text" id="modalServiceTitle" placeholder="e.g., Express Delivery">
+                </div>
+                <div class="form-group">
+                    <label>Description <span class="required">*</span></label>
+                    <textarea id="modalServiceDesc" placeholder="Describe this service..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Service Image</label>
+                    <div class="image-upload-area" onclick="document.getElementById('modalServiceImageFile').click()">
+                        <div class="upload-placeholder" id="servicePlaceholder">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to upload image</p>
+                            <span>PNG, JPG up to 5MB</span>
+                        </div>
+                        <img id="modalServicePreview" class="image-preview" alt="Preview">
+                    </div>
+                    <input type="file" id="modalServiceImageFile" class="file-input" accept="image/*">
+                    <input type="hidden" id="modalServiceImageUrl">
+                    <div id="serviceUploadStatus" class="upload-status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveService()" id="saveServiceBtn">
+                    <i class="fas fa-save"></i> Save Service
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Team Modal -->
+    <div id="teamModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="teamModalTitle"><i class="fas fa-user"></i> Add Team Member</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Full Name <span class="required">*</span></label>
+                    <input type="text" id="modalTeamName" placeholder="e.g., John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Position / Role <span class="required">*</span></label>
+                    <input type="text" id="modalTeamPosition" placeholder="e.g., CEO & Founder">
+                </div>
+                <div class="form-group">
+                    <label>About / Bio</label>
+                    <textarea id="modalTeamAbout" placeholder="Brief description about this team member..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Profile Picture</label>
+                    <div class="image-upload-area" onclick="document.getElementById('modalTeamImageFile').click()">
+                        <div class="upload-placeholder" id="teamPlaceholder">
+                            <i class="fas fa-user-circle"></i>
+                            <p>Click to upload portrait image</p>
+                            <span>Recommended: 600×800px (3:4 ratio)</span>
+                        </div>
+                        <img id="modalTeamPreview" class="image-preview" alt="Preview">
+                    </div>
+                    <input type="file" id="modalTeamImageFile" class="file-input" accept="image/*">
+                    <input type="hidden" id="modalTeamImageUrl">
+                    <div id="teamUploadStatus" class="upload-status"></div>
+                    <p class="form-help"><i class="fas fa-info-circle"></i> Use portrait (vertical) images for best results</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveTeamMember()" id="saveTeamBtn">
+                    <i class="fas fa-save"></i> Save Member
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Blog Modal -->
+    <div id="blogModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="blogModalTitle"><i class="fas fa-newspaper"></i> Add Blog Post</h2>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Blog Title <span class="required">*</span></label>
+                    <input type="text" id="modalBlogTitle" placeholder="Enter blog post title">
+                </div>
+                <div class="form-group">
+                    <label>Content <span class="required">*</span></label>
+                    <textarea id="modalBlogContent" placeholder="Write your blog content here..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Featured Image</label>
+                    <div class="image-upload-area" onclick="document.getElementById('modalBlogImageFile').click()">
+                        <div class="upload-placeholder" id="blogPlaceholder">
+                            <i class="fas fa-image"></i>
+                            <p>Click to upload featured image</p>
+                            <span>Recommended: 1200×800px (3:2 ratio)</span>
+                        </div>
+                        <img id="modalBlogPreview" class="image-preview" alt="Preview">
+                    </div>
+                    <input type="file" id="modalBlogImageFile" class="file-input" accept="image/*">
+                    <input type="hidden" id="modalBlogImageUrl">
+                    <div id="blogUploadStatus" class="upload-status"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal()">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button class="btn btn-primary" onclick="saveBlogPost()" id="saveBlogBtn">
+                    <i class="fas fa-save"></i> Publish Post
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== CONFIGURATION (DO NOT MODIFY) ==========
+        const IMGBB_API_KEY = '1b502425f0f2e1e862861749243116e5';
+        
+        const firebaseConfig = {
+            apiKey: "AIzaSyB5-gCHNUrg3KhfvHizZ5GIElf29D996Jg",
+            authDomain: "tekaccess-logistics.firebaseapp.com",
+            projectId: "tekaccess-logistics",
+            storageBucket: "tekaccess-logistics.firebasestorage.app",
+            messagingSenderId: "406376882578",
+            appId: "1:406376882578:web:905382f56e3c363626214b",
+            measurementId: "G-DZWWV9Q0TN"
+        };
+
+        // ========== INITIALIZE FIREBASE ==========
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+        }
+
+        // ========== THEME TOGGLE ==========
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('admin-theme') || 'light';
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            const isDark = document.body.classList.contains('dark');
+            localStorage.setItem('admin-theme', isDark ? 'dark' : 'light');
+            
+            if (isDark) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+            }
+        });
+
+        // ========== MOBILE MENU ==========
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const sidebar = document.getElementById('sidebar');
+        
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // ========== GLOBAL VARIABLES ==========
+        let currentUser = null;
+        let editingServiceId = null;
+        let editingTeamId = null;
+        let editingBlogId = null;
+
+        // ========== AUTHENTICATION ==========
+        firebase.auth().onAuthStateChanged((user) => {
+            currentUser = user;
+            if (user) {
+                document.getElementById('userEmail').textContent = user.email;
+                loadAllData();
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // ========== LOGOUT ==========
+        document.getElementById('logoutBtn').addEventListener('click', async function() {
+            try {
+                await firebase.auth().signOut();
+                window.location.href = "/";
+            } catch (error) {
+                showError('Failed to sign out. Please try again.');
+            }
+        });
+
+        // ========== IMGBB UPLOAD ==========
+        async function uploadToImgBB(type) {
+            const typeCapitalized = type.charAt(0).toUpperCase() + type.slice(1);
+            const fileInput = document.getElementById(`modal${typeCapitalized}ImageFile`);
+            const statusDiv = document.getElementById(`${type}UploadStatus`);
+            const previewImg = document.getElementById(`modal${typeCapitalized}Preview`);
+            const hiddenInput = document.getElementById(`modal${typeCapitalized}ImageUrl`);
+            const placeholder = document.getElementById(`${type}Placeholder`);
+            
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                statusDiv.innerHTML = '<span class="error"><i class="fas fa-exclamation-circle"></i> Please select an image first</span>';
+                statusDiv.className = 'upload-status error';
+                return false;
+            }
+            
+            // Check file size (5MB limit)
+            if (file.size > 5 * 1024 * 1024) {
+                statusDiv.innerHTML = '<span><i class="fas fa-exclamation-circle"></i> Image must be less than 5MB</span>';
+                statusDiv.className = 'upload-status error';
+                return false;
+            }
+            
+            // Check for portrait orientation for team images
+            if (type === 'team') {
+                const img = new Image();
+                const objectUrl = URL.createObjectURL(file);
+                
+                await new Promise((resolve) => {
+                    img.onload = function() {
+                        URL.revokeObjectURL(objectUrl);
+                        if (this.width > this.height) {
+                            statusDiv.innerHTML = '<span><i class="fas fa-exclamation-triangle"></i> Please use a portrait (vertical) image</span>';
+                            statusDiv.className = 'upload-status error';
+                        }
+                        resolve();
+                    };
+                    img.src = objectUrl;
+                });
+                
+                if (statusDiv.className.includes('error')) {
+                    return false;
+                }
+            }
+            
+            statusDiv.innerHTML = '<div class="spinner"></div> Uploading...';
+            statusDiv.className = 'upload-status uploading';
+            
+            const formData = new FormData();
+            formData.append('image', file);
+            
+            try {
+                const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    const imageUrl = data.data.url;
+                    hiddenInput.value = imageUrl;
+                    previewImg.src = imageUrl;
+                    previewImg.classList.add('show');
+                    if (placeholder) placeholder.style.display = 'none';
+                    statusDiv.innerHTML = '<i class="fas fa-check-circle"></i> Upload successful!';
+                    statusDiv.className = 'upload-status success';
+                    return true;
+                } else {
+                    throw new Error(data.error?.message || 'Upload failed');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = `<i class="fas fa-times-circle"></i> Upload failed: ${error.message}`;
+                statusDiv.className = 'upload-status error';
+                return false;
+            }
+        }
+
+        // ========== MODAL FUNCTIONS ==========
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.style.display = 'none';
+            });
+            resetModalForms();
+        }
+
+        function resetModalForms() {
+            editingServiceId = null;
+            editingTeamId = null;
+            editingBlogId = null;
+            
+            // Reset all inputs
+            document.getElementById('modalServiceTitle').value = '';
+            document.getElementById('modalServiceDesc').value = '';
+            document.getElementById('modalTeamName').value = '';
+            document.getElementById('modalTeamPosition').value = '';
+            document.getElementById('modalTeamAbout').value = '';
+            document.getElementById('modalBlogTitle').value = '';
+            document.getElementById('modalBlogContent').value = '';
+            
+            // Reset file inputs and previews
+            ['Service', 'Team', 'Blog'].forEach(type => {
+                const fileInput = document.getElementById(`modal${type}ImageFile`);
+                const preview = document.getElementById(`modal${type}Preview`);
+                const hiddenInput = document.getElementById(`modal${type}ImageUrl`);
+                const status = document.getElementById(`${type.toLowerCase()}UploadStatus`);
+                const placeholder = document.getElementById(`${type.toLowerCase()}Placeholder`);
+                
+                if (fileInput) fileInput.value = '';
+                if (preview) {
+                    preview.src = '';
+                    preview.classList.remove('show');
+                }
+                if (hiddenInput) hiddenInput.value = '';
+                if (status) status.innerHTML = '';
+                if (placeholder) placeholder.style.display = 'block';
+            });
+        }
+
+        function showAddServiceModal(serviceId = null) {
+            resetModalForms();
+            
+            if (serviceId) {
+                editingServiceId = serviceId;
+                document.getElementById('serviceModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Service';
+                document.getElementById('saveServiceBtn').innerHTML = '<i class="fas fa-save"></i> Update Service';
+                
+                firebase.firestore().collection('services').doc(serviceId).get()
+                    .then(doc => {
+                        if (doc.exists) {
+                            const service = doc.data();
+                            document.getElementById('modalServiceTitle').value = service.title || '';
+                            document.getElementById('modalServiceDesc').value = service.description || '';
+                            
+                            if (service.imageUrl) {
+                                document.getElementById('modalServiceImageUrl').value = service.imageUrl;
+                                document.getElementById('modalServicePreview').src = service.imageUrl;
+                                document.getElementById('modalServicePreview').classList.add('show');
+                                document.getElementById('servicePlaceholder').style.display = 'none';
+                            }
+                        }
+                    });
+            } else {
+                document.getElementById('serviceModalTitle').innerHTML = '<i class="fas fa-concierge-bell"></i> Add New Service';
+                document.getElementById('saveServiceBtn').innerHTML = '<i class="fas fa-save"></i> Save Service';
+            }
+            showModal('serviceModal');
+        }
+
+        function showAddTeamModal(teamId = null) {
+            resetModalForms();
+            
+            if (teamId) {
+                editingTeamId = teamId;
+                document.getElementById('teamModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Team Member';
+                document.getElementById('saveTeamBtn').innerHTML = '<i class="fas fa-save"></i> Update Member';
+                
+                firebase.firestore().collection('team').doc(teamId).get()
+                    .then(doc => {
+                        if (doc.exists) {
+                            const member = doc.data();
+                            document.getElementById('modalTeamName').value = member.name || '';
+                            document.getElementById('modalTeamPosition').value = member.position || '';
+                            document.getElementById('modalTeamAbout').value = member.about || member.bio || '';
+                            
+                            if (member.imageUrl) {
+                                document.getElementById('modalTeamImageUrl').value = member.imageUrl;
+                                document.getElementById('modalTeamPreview').src = member.imageUrl;
+                                document.getElementById('modalTeamPreview').classList.add('show');
+                                document.getElementById('teamPlaceholder').style.display = 'none';
+                            }
+                        }
+                    });
+            } else {
+                document.getElementById('teamModalTitle').innerHTML = '<i class="fas fa-user"></i> Add Team Member';
+                document.getElementById('saveTeamBtn').innerHTML = '<i class="fas fa-save"></i> Save Member';
+            }
+            showModal('teamModal');
+        }
+
+        function showAddBlogModal(blogId = null) {
+            resetModalForms();
+            
+            if (blogId) {
+                editingBlogId = blogId;
+                document.getElementById('blogModalTitle').innerHTML = '<i class="fas fa-edit"></i> Edit Blog Post';
+                document.getElementById('saveBlogBtn').innerHTML = '<i class="fas fa-save"></i> Update Post';
+                
+                firebase.firestore().collection('blogs').doc(blogId).get()
+                    .then(doc => {
+                        if (doc.exists) {
+                            const blog = doc.data();
+                            document.getElementById('modalBlogTitle').value = blog.title || '';
+                            document.getElementById('modalBlogContent').value = blog.content || '';
+                            
+                            if (blog.imageUrl) {
+                                document.getElementById('modalBlogImageUrl').value = blog.imageUrl;
+                                document.getElementById('modalBlogPreview').src = blog.imageUrl;
+                                document.getElementById('modalBlogPreview').classList.add('show');
+                                document.getElementById('blogPlaceholder').style.display = 'none';
+                            }
+                        }
+                    });
+            } else {
+                document.getElementById('blogModalTitle').innerHTML = '<i class="fas fa-newspaper"></i> Add Blog Post';
+                document.getElementById('saveBlogBtn').innerHTML = '<i class="fas fa-save"></i> Publish Post';
+            }
+            showModal('blogModal');
+        }
+
+        // ========== SAVE FUNCTIONS ==========
+        async function saveService() {
+            const title = document.getElementById('modalServiceTitle').value.trim();
+            const description = document.getElementById('modalServiceDesc').value.trim();
+            const imageUrl = document.getElementById('modalServiceImageUrl').value;
+            
+            if (!title || !description) {
+                showError('Please fill in title and description');
+                return;
+            }
+            
+            const btn = document.getElementById('saveServiceBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Saving...';
+            
+            try {
+                const serviceData = {
+                    title: title,
+                    description: description,
+                    imageUrl: imageUrl || '',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (editingServiceId) {
+                    await firebase.firestore().collection('services').doc(editingServiceId).update(serviceData);
+                    showSuccess('Service updated successfully!');
+                } else {
+                    serviceData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await firebase.firestore().collection('services').add(serviceData);
+                    showSuccess('Service created successfully!');
+                }
+                
+                closeModal();
+                loadServices();
+            } catch (error) {
+                showError('Error saving service: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Service';
+            }
+        }
+
+        async function saveTeamMember() {
+            const name = document.getElementById('modalTeamName').value.trim();
+            const position = document.getElementById('modalTeamPosition').value.trim();
+            const about = document.getElementById('modalTeamAbout').value.trim();
+            const imageUrl = document.getElementById('modalTeamImageUrl').value;
+            
+            if (!name || !position) {
+                showError('Please fill in name and position');
+                return;
+            }
+            
+            const btn = document.getElementById('saveTeamBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Saving...';
+            
+            try {
+                const memberData = {
+                    name: name,
+                    position: position,
+                    about: about || '',
+                    imageUrl: imageUrl || '',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (editingTeamId) {
+                    await firebase.firestore().collection('team').doc(editingTeamId).update(memberData);
+                    showSuccess('Team member updated successfully!');
+                } else {
+                    memberData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    await firebase.firestore().collection('team').add(memberData);
+                    showSuccess('Team member added successfully!');
+                }
+                
+                closeModal();
+                loadTeam();
+            } catch (error) {
+                showError('Error saving team member: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Member';
+            }
+        }
+
+        async function saveBlogPost() {
+            const title = document.getElementById('modalBlogTitle').value.trim();
+            const content = document.getElementById('modalBlogContent').value.trim();
+            const imageUrl = document.getElementById('modalBlogImageUrl').value;
+            
+            if (!title || !content) {
+                showError('Please fill in title and content');
+                return;
+            }
+            
+            const btn = document.getElementById('saveBlogBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner"></div> Saving...';
+            
+            try {
+                const blogData = {
+                    title: title,
+                    content: content,
+                    imageUrl: imageUrl || '',
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
+                if (editingBlogId) {
+                    await firebase.firestore().collection('blogs').doc(editingBlogId).update(blogData);
+                    showSuccess('Blog post updated successfully!');
+                } else {
+                    blogData.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+                    blogData.date = firebase.firestore.FieldValue.serverTimestamp();
+                    await firebase.firestore().collection('blogs').add(blogData);
+                    showSuccess('Blog post published successfully!');
+                }
+                
+                closeModal();
+                loadBlogs();
+            } catch (error) {
+                showError('Error saving blog post: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Publish Post';
+            }
+        }
+
+        // ========== DELETE FUNCTIONS ==========
+        async function deleteService(id) {
+            if (confirm('Are you sure you want to delete this service?')) {
+                try {
+                    await firebase.firestore().collection('services').doc(id).delete();
+                    showSuccess('Service deleted successfully');
+                    loadServices();
+                } catch (error) {
+                    showError('Error deleting service');
+                }
+            }
+        }
+
+        async function deleteTeamMember(id) {
+            if (confirm('Are you sure you want to delete this team member?')) {
+                try {
+                    await firebase.firestore().collection('team').doc(id).delete();
+                    showSuccess('Team member deleted successfully');
+                    loadTeam();
+                } catch (error) {
+                    showError('Error deleting team member');
+                }
+            }
+        }
+
+        async function deleteBlog(id) {
+            if (confirm('Are you sure you want to delete this blog post?')) {
+                try {
+                    await firebase.firestore().collection('blogs').doc(id).delete();
+                    showSuccess('Blog post deleted successfully');
+                    loadBlogs();
+                } catch (error) {
+                    showError('Error deleting blog post');
+                }
+            }
+        }
+
+        // ========== LOAD FUNCTIONS ==========
+        async function loadServices() {
+            try {
+                const snapshot = await firebase.firestore().collection('services').get();
+                const list = document.getElementById('servicesList');
+                
+                if (snapshot.empty) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-concierge-bell"></i>
+                            <h4>No services yet</h4>
+                            <p>Add your first service to get started</p>
+                        </div>
+                    `;
+                    document.getElementById('servicesCount').textContent = '0';
+                    document.getElementById('totalServicesText').textContent = '0 services';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const s = doc.data();
+                    const imgSrc = s.imageUrl || 'https://via.placeholder.com/60x60?text=No+Image';
+                    list.innerHTML += `
+                        <div class="content-item">
+                            <div class="content-item-info">
+                                <img src="${imgSrc}" class="content-item-image" alt="${s.title || 'Service'}" onerror="this.src='https://via.placeholder.com/60x60?text=Error'">
+                                <div class="content-item-text">
+                                    <h4>${s.title || 'Untitled'}</h4>
+                                    <p>${s.description ? s.description.substring(0, 80) + (s.description.length > 80 ? '...' : '') : 'No description'}</p>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="action-btn edit-btn" onclick="showAddServiceModal('${doc.id}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteService('${doc.id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                const count = snapshot.size;
+                document.getElementById('servicesCount').textContent = count;
+                document.getElementById('totalServicesText').textContent = `${count} service${count !== 1 ? 's' : ''}`;
+            } catch (error) {
+                console.error('Error loading services:', error);
+            }
+        }
+
+        async function loadTeam() {
+            try {
+                const snapshot = await firebase.firestore().collection('team').get();
+                const list = document.getElementById('teamList');
+                
+                if (snapshot.empty) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-users"></i>
+                            <h4>No team members yet</h4>
+                            <p>Add your first team member to get started</p>
+                        </div>
+                    `;
+                    document.getElementById('teamCount').textContent = '0';
+                    document.getElementById('totalTeamText').textContent = '0 members';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const m = doc.data();
+                    const imgSrc = m.imageUrl || 'https://via.placeholder.com/60x60?text=No+Photo';
+                    list.innerHTML += `
+                        <div class="content-item">
+                            <div class="content-item-info">
+                                <img src="${imgSrc}" class="content-item-image team" alt="${m.name || 'Team Member'}" onerror="this.src='https://via.placeholder.com/60x60?text=Error'">
+                                <div class="content-item-text">
+                                    <h4>${m.name || 'Unnamed'}</h4>
+                                    <p>${m.position || 'No position'}</p>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="action-btn edit-btn" onclick="showAddTeamModal('${doc.id}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteTeamMember('${doc.id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                const count = snapshot.size;
+                document.getElementById('teamCount').textContent = count;
+                document.getElementById('totalTeamText').textContent = `${count} member${count !== 1 ? 's' : ''}`;
+            } catch (error) {
+                console.error('Error loading team:', error);
+            }
+        }
+
+        async function loadBlogs() {
+            try {
+                const snapshot = await firebase.firestore().collection('blogs').get();
+                const list = document.getElementById('blogsList');
+                
+                if (snapshot.empty) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-newspaper"></i>
+                            <h4>No blog posts yet</h4>
+                            <p>Create your first blog post to get started</p>
+                        </div>
+                    `;
+                    document.getElementById('blogsCount').textContent = '0';
+                    document.getElementById('totalBlogsText').textContent = '0 posts';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const b = doc.data();
+                    const imgSrc = b.imageUrl || 'https://via.placeholder.com/60x60?text=No+Image';
+                    list.innerHTML += `
+                        <div class="content-item">
+                            <div class="content-item-info">
+                                <img src="${imgSrc}" class="content-item-image" alt="${b.title || 'Blog'}" onerror="this.src='https://via.placeholder.com/60x60?text=Error'">
+                                <div class="content-item-text">
+                                    <h4>${b.title || 'Untitled'}</h4>
+                                    <p>${b.content ? b.content.substring(0, 100) + (b.content.length > 100 ? '...' : '') : 'No content'}</p>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button class="action-btn edit-btn" onclick="showAddBlogModal('${doc.id}')">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="action-btn delete-btn" onclick="deleteBlog('${doc.id}')">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                const count = snapshot.size;
+                document.getElementById('blogsCount').textContent = count;
+                document.getElementById('totalBlogsText').textContent = `${count} post${count !== 1 ? 's' : ''}`;
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+            }
+        }
+
+        // ========== ALERTS ==========
+        function showSuccess(message) {
+            const alert = document.getElementById('successAlert');
+            document.getElementById('successMessage').textContent = message;
+            alert.style.display = 'flex';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 3000);
+        }
+
+        function showError(message) {
+            const alert = document.getElementById('errorAlert');
+            document.getElementById('errorMessage').textContent = message;
+            alert.style.display = 'flex';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 4000);
+        }
+
+        function loadAllData() {
+            loadServices();
+            loadTeam();
+            loadBlogs();
+        }
+
+        // ========== SIDEBAR NAVIGATION ==========
+        const pageInfo = {
+            services: { title: 'Services', subtitle: 'Manage your service offerings' },
+            team: { title: 'Team Members', subtitle: 'Manage your team profiles' },
+            blogs: { title: 'Blog Posts', subtitle: 'Manage your blog content' }
+        };
+
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const tab = this.getAttribute('data-tab');
+                
+                document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                document.getElementById(tab + 'Tab').classList.add('active');
+                
+                document.getElementById('pageTitle').textContent = pageInfo[tab].title;
+                document.getElementById('pageSubtitle').textContent = pageInfo[tab].subtitle;
+                
+                // Close mobile menu
+                sidebar.classList.remove('open');
+                
+                if (tab === 'services') loadServices();
+                else if (tab === 'team') loadTeam();
+                else if (tab === 'blogs') loadBlogs();
+            });
+        });
+
+        // ========== FILE INPUT LISTENERS ==========
+        document.getElementById('modalServiceImageFile').addEventListener('change', () => uploadToImgBB('service'));
+        document.getElementById('modalTeamImageFile').addEventListener('change', () => uploadToImgBB('team'));
+        document.getElementById('modalBlogImageFile').addEventListener('change', () => uploadToImgBB('blog'));
+
+        // ========== CLOSE MODAL ON OUTSIDE CLICK ==========
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    closeModal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
